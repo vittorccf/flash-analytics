@@ -1,0 +1,16 @@
+node_modules/
+.next/
+.next-e2e/
+out/
+next-env.d.ts
+# Cliente do Prisma 7, gerado no postinstall/build
+src/generated/
+*.tsbuildinfo
+.env
+.env.local
+.env*.local
+.pgdata/
+.pgdata-e2e/
+test-results/
+playwright-report/
+.vercel

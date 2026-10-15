@@ -1,0 +1,369 @@
+@import "tailwindcss";
+
+/*
+ * Design system Flash Contacts (marca Flash Analytics). Guia completo em docs/DESIGN-SYSTEM.md.
+ *
+ * Três camadas:
+ *   1. Primitivos (--color-brand-*, --color-ink-*): a paleta da marca. Componentes NÃO usam direto.
+ *   2. Semânticos (primary, danger, surface…): o que a cor significa. É o que as telas usam.
+ *   3. Componentes (sidebar-*, chart-*): áreas com regras próprias.
+ * Trocar a marca ou criar um tema escuro mexe só aqui. O contraste dos pares é verificado em
+ * tests/unit/design-tokens.test.ts.
+ */
+/* static: emite todas as variáveis, inclusive as usadas só via var() (gráficos, gradiente, testes). */
+@theme static {
+  --font-sans: var(--font-roboto), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", Consolas, monospace;
+
+  /* Cantos retos em toda a interface; só círculos (avatar, badge, botão redondo) usam rounded-full. */
+  --radius-xs: 0;
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --radius-2xl: 0;
+  --radius-3xl: 0;
+  --radius-4xl: 0;
+
+  /* 1. Primitivos: vermelho dos chevrons (#BA1C1C é o --primary do site institucional). */
+  --color-brand-50: #fef2f2;
+  --color-brand-100: #fee2e2;
+  --color-brand-200: #fecaca;
+  --color-brand-300: #fca5a5;
+  --color-brand-400: #f87171;
+  --color-brand-500: #ef4444;
+  --color-brand-600: #dc2626;
+  --color-brand-700: #ba1c1c;
+  --color-brand-800: #991b1b;
+  --color-brand-900: #7f1d1d;
+  --color-brand-950: #450a0a;
+
+  /* Neutros "ink": o grafite/preto das seções escuras do site. */
+  --color-ink-50: #f9fafb;
+  --color-ink-100: #f3f4f6;
+  --color-ink-200: #e5e7eb;
+  --color-ink-300: #d1d5db;
+  --color-ink-400: #9ca3af;
+  --color-ink-500: #6b7280;
+  --color-ink-600: #4b5563;
+  --color-ink-700: #374151;
+  --color-ink-800: #1f2937;
+  --color-ink-900: #111827;
+  --color-ink-950: #0b0d12;
+
+  /* 2. Semânticos */
+  --color-background: var(--color-ink-50);
+  --color-surface: #ffffff;
+  --color-foreground: var(--color-ink-900);
+  --color-muted: var(--color-ink-500);
+  --color-muted-strong: var(--color-ink-600);
+  --color-border: var(--color-ink-200);
+  --color-subtle: var(--color-ink-100);
+
+  --color-primary: var(--color-brand-700);
+  --color-primary-hover: var(--color-brand-800);
+  --color-primary-foreground: #ffffff;
+  --color-primary-soft: var(--color-brand-50);
+  --color-primary-strong: var(--color-brand-800);
+
+  /* Foco em grafite, não vermelho: contorno vermelho num campo é lido como erro. */
+  --color-ring: var(--color-ink-900);
+
+  --color-success: #16a34a;
+  --color-success-soft: #dcfce7;
+  --color-success-strong: #166534;
+  --color-warning: #d97706;
+  --color-warning-soft: #fef3c7;
+  --color-warning-strong: #92400e;
+  /* Erro também é vermelho: nunca dependa só da cor (ícone + texto; botão de perigo é contornado). */
+  --color-danger: #c81e1e;
+  --color-danger-hover: #9b1c1c;
+  --color-danger-soft: #fdf2f2;
+  --color-danger-strong: #9b1c1c;
+
+  /* 3. Componentes */
+  --color-sidebar: var(--color-ink-950);
+  --color-sidebar-foreground: #f3f4f6;
+  --color-sidebar-muted: #9ca3af;
+  --color-sidebar-accent: #1c212b;
+  --color-sidebar-border: #232833;
+
+  /* Gráficos: a marca primeiro, depois cores bem separadas entre si (inclusive para daltonismo). */
+  --color-chart-1: var(--color-brand-700);
+  --color-chart-2: var(--color-ink-700);
+  --color-chart-3: #d97706;
+  --color-chart-4: #0e7490;
+  --color-chart-5: var(--color-brand-400);
+  --color-chart-6: var(--color-ink-400);
+  --color-chart-grid: var(--color-ink-200);
+  --color-chart-axis: var(--color-ink-500);
+
+  /* Texto sobre o degradê da marca (igual nos dois temas: o degradê não muda). */
+  --color-on-brand: #ffffff;
+
+  /* Canais de contato. WhatsApp no verde-petróleo da marca deles (o verde-claro não chega a 3:1 sobre branco). */
+  --color-whatsapp: #128c7e;
+
+  /* Mapa de intensidade: escala sequencial da marca, do claro (poucos) ao escuro (muitos). 0 = sem dados.
+     Texto escuro nas faixas 0–3 e claro nas 4–5 (pares verificados no teste de contraste). */
+  --color-map-0: var(--color-ink-100);
+  --color-map-1: var(--color-brand-100);
+  --color-map-2: var(--color-brand-200);
+  --color-map-3: var(--color-brand-400);
+  --color-map-4: var(--color-brand-600);
+  --color-map-5: var(--color-brand-800);
+}
+
+:root {
+  /* Gradiente da marca: só em superfícies de identidade (logo, painel do login), nunca em controles. */
+  --gradient-brand: linear-gradient(135deg, var(--color-brand-500) 0%, var(--color-brand-700) 55%, var(--color-brand-900) 100%);
+  /* Versão para fundo de TEXTO: começa no brand-700, então o branco passa no contraste AA em toda a área. */
+  --gradient-brand-strong: linear-gradient(135deg, var(--color-brand-700) 0%, var(--color-brand-800) 50%, var(--color-brand-950) 100%);
+}
+
+html {
+  color-scheme: light;
+}
+
+/*
+ * Tema escuro. Só os tokens semânticos/de componente mudam; as telas não sabem que tema está ativo.
+ * data-theme vem do cookie (servidor, sem piscar): "light", "dark" ou "system" (segue o sistema operacional).
+ * Os dois blocos abaixo PRECISAM ser idênticos (o teste de tokens confere e verifica o contraste de cada par).
+ */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-background: #0b0d12;
+  --color-surface: #12161f;
+  --color-foreground: #f3f4f6;
+  --color-muted: #9ca3af;
+  --color-muted-strong: #d1d5db;
+  --color-border: #262c38;
+  --color-subtle: #1a1f29;
+  --color-primary: #ef4444;
+  --color-primary-hover: #f87171;
+  --color-primary-foreground: #0b0d12;
+  --color-primary-soft: #2a1215;
+  --color-primary-strong: #fca5a5;
+  --color-ring: #f3f4f6;
+  --color-success: #22c55e;
+  --color-success-soft: #0f2a1a;
+  --color-success-strong: #86efac;
+  --color-warning: #f59e0b;
+  --color-warning-soft: #2b1d07;
+  --color-warning-strong: #fcd34d;
+  --color-danger: #f87171;
+  --color-danger-hover: #fca5a5;
+  --color-danger-soft: #2a1215;
+  --color-danger-strong: #fca5a5;
+  --color-chart-1: #ef4444;
+  --color-chart-2: #d1d5db;
+  --color-chart-3: #f59e0b;
+  --color-chart-4: #22d3ee;
+  --color-chart-5: #fca5a5;
+  --color-chart-6: #9ca3af;
+  --color-chart-grid: #262c38;
+  --color-chart-axis: #9ca3af;
+  --color-whatsapp: #25d366;
+  --color-map-0: #1a1f29;
+  --color-map-1: #3a1414;
+  --color-map-2: #5c1a1a;
+  --color-map-3: #8b1d1d;
+  --color-map-4: #ef4444;
+  --color-map-5: #fca5a5;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="system"] {
+    color-scheme: dark;
+    --color-background: #0b0d12;
+    --color-surface: #12161f;
+    --color-foreground: #f3f4f6;
+    --color-muted: #9ca3af;
+    --color-muted-strong: #d1d5db;
+    --color-border: #262c38;
+    --color-subtle: #1a1f29;
+    --color-primary: #ef4444;
+    --color-primary-hover: #f87171;
+    --color-primary-foreground: #0b0d12;
+    --color-primary-soft: #2a1215;
+    --color-primary-strong: #fca5a5;
+    --color-ring: #f3f4f6;
+    --color-success: #22c55e;
+    --color-success-soft: #0f2a1a;
+    --color-success-strong: #86efac;
+    --color-warning: #f59e0b;
+    --color-warning-soft: #2b1d07;
+    --color-warning-strong: #fcd34d;
+    --color-danger: #f87171;
+    --color-danger-hover: #fca5a5;
+    --color-danger-soft: #2a1215;
+    --color-danger-strong: #fca5a5;
+    --color-chart-1: #ef4444;
+    --color-chart-2: #d1d5db;
+    --color-chart-3: #f59e0b;
+    --color-chart-4: #22d3ee;
+    --color-chart-5: #fca5a5;
+    --color-chart-6: #9ca3af;
+    --color-chart-grid: #262c38;
+    --color-chart-axis: #9ca3af;
+    --color-whatsapp: #25d366;
+    --color-map-0: #1a1f29;
+    --color-map-1: #3a1414;
+    --color-map-2: #5c1a1a;
+    --color-map-3: #8b1d1d;
+    --color-map-4: #ef4444;
+    --color-map-5: #fca5a5;
+  }
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Foco sempre visível para quem navega por teclado. */
+:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+/* Superfícies escuras (sidebar, painel do login) invertem o anel de foco. */
+[data-surface="dark"] {
+  --color-ring: var(--color-sidebar-foreground);
+}
+
+::selection {
+  background: var(--color-brand-100);
+  color: var(--color-brand-950);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Identidade Flash Analytics: degradê vermelho em pontos de marca (não em controles comuns). */
+.surface-sidebar {
+  /* Brilho da marca no alto da coluna escura, como no site institucional. */
+  background:
+    radial-gradient(120% 38% at 0% 0%, color-mix(in oklab, var(--color-brand-700) 42%, transparent), transparent 70%),
+    var(--color-sidebar);
+}
+
+.brand-hairline {
+  background: var(--gradient-brand);
+}
+
+.surface-brand {
+  background:
+    radial-gradient(90% 120% at 100% 0%, color-mix(in oklab, var(--color-brand-500) 45%, transparent), transparent 60%),
+    var(--gradient-brand-strong);
+  color: var(--color-on-brand);
+}
+
+/*
+ * Profundidade minimalista: 4 níveis de elevação com sombras em camadas, de baixíssima opacidade (luz de cima).
+ * 1 = cartões e botões · 2 = cartão em destaque · 3 = menus e popovers · 4 = modais e painéis flutuantes.
+ * No escuro, sombra mais densa + um filete de luz no topo (a superfície "sobe" sem precisar de borda forte).
+ */
+:root {
+  --elevation-1: 0 1px 2px rgb(17 24 39 / 0.04), 0 1px 3px rgb(17 24 39 / 0.03);
+  --elevation-2: 0 1px 2px rgb(17 24 39 / 0.04), 0 6px 16px -4px rgb(17 24 39 / 0.08);
+  --elevation-3: 0 2px 4px rgb(17 24 39 / 0.04), 0 14px 32px -8px rgb(17 24 39 / 0.14);
+  --elevation-4: 0 4px 8px rgb(17 24 39 / 0.05), 0 28px 64px -16px rgb(17 24 39 / 0.28);
+  --field-depth: inset 0 1px 1px rgb(17 24 39 / 0.04);
+  /* Sombra de texto quase imperceptível: só tira o "chapado" dos títulos. */
+  --text-depth: 0 1px 1px rgb(17 24 39 / 0.06);
+  /* Brilho muito leve da marca no alto da área de trabalho. */
+  --canvas-glow: radial-gradient(1200px 420px at 60% -220px, color-mix(in oklab, var(--color-brand-500) 6%, transparent), transparent 70%);
+  /* Modal: borda preta translúcida em degradê (mais forte embaixo, como sombra) + sombra em três camadas. */
+  --modal-edge: linear-gradient(to bottom, rgb(0 0 0 / 0.1), rgb(0 0 0 / 0.42));
+  --modal-shadow: 0 2px 6px rgb(0 0 0 / 0.08), 0 24px 48px -12px rgb(0 0 0 / 0.3), 0 56px 112px -28px rgb(0 0 0 / 0.28);
+}
+
+:root[data-theme="dark"] {
+  --elevation-1: inset 0 1px 0 rgb(255 255 255 / 0.03), 0 1px 2px rgb(0 0 0 / 0.5);
+  --elevation-2: inset 0 1px 0 rgb(255 255 255 / 0.04), 0 8px 20px -6px rgb(0 0 0 / 0.6);
+  --elevation-3: inset 0 1px 0 rgb(255 255 255 / 0.05), 0 16px 36px -8px rgb(0 0 0 / 0.7);
+  --elevation-4: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 32px 72px -16px rgb(0 0 0 / 0.8);
+  --field-depth: inset 0 1px 2px rgb(0 0 0 / 0.35);
+  --text-depth: 0 1px 2px rgb(0 0 0 / 0.45);
+  --canvas-glow: radial-gradient(1200px 420px at 60% -220px, color-mix(in oklab, var(--color-brand-500) 9%, transparent), transparent 70%);
+  --modal-edge: linear-gradient(to bottom, rgb(255 255 255 / 0.1), rgb(0 0 0 / 0.95));
+  --modal-shadow: 0 2px 6px rgb(0 0 0 / 0.5), 0 24px 48px -12px rgb(0 0 0 / 0.75), 0 56px 112px -28px rgb(0 0 0 / 0.7);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="system"] {
+    --elevation-1: inset 0 1px 0 rgb(255 255 255 / 0.03), 0 1px 2px rgb(0 0 0 / 0.5);
+    --elevation-2: inset 0 1px 0 rgb(255 255 255 / 0.04), 0 8px 20px -6px rgb(0 0 0 / 0.6);
+    --elevation-3: inset 0 1px 0 rgb(255 255 255 / 0.05), 0 16px 36px -8px rgb(0 0 0 / 0.7);
+    --elevation-4: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 32px 72px -16px rgb(0 0 0 / 0.8);
+    --field-depth: inset 0 1px 2px rgb(0 0 0 / 0.35);
+    --text-depth: 0 1px 2px rgb(0 0 0 / 0.45);
+    --canvas-glow: radial-gradient(1200px 420px at 60% -220px, color-mix(in oklab, var(--color-brand-500) 9%, transparent), transparent 70%);
+    --modal-edge: linear-gradient(to bottom, rgb(255 255 255 / 0.1), rgb(0 0 0 / 0.95));
+    --modal-shadow: 0 2px 6px rgb(0 0 0 / 0.5), 0 24px 48px -12px rgb(0 0 0 / 0.75), 0 56px 112px -28px rgb(0 0 0 / 0.7);
+  }
+}
+
+@utility elevation-1 {
+  box-shadow: var(--elevation-1);
+}
+@utility elevation-2 {
+  box-shadow: var(--elevation-2);
+}
+@utility elevation-3 {
+  box-shadow: var(--elevation-3);
+}
+@utility elevation-4 {
+  box-shadow: var(--elevation-4);
+}
+@utility field-depth {
+  box-shadow: var(--field-depth);
+}
+@utility text-depth {
+  text-shadow: var(--text-depth);
+}
+/* A borda em degradê é o fundo "border-box" aparecendo pela borda transparente; o conteúdo pinta o "padding-box". */
+@utility modal-depth {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--color-surface), var(--color-surface)) padding-box,
+    var(--modal-edge) border-box;
+  box-shadow: var(--modal-shadow);
+}
+@utility canvas-glow {
+  background-image: var(--canvas-glow);
+}
+
+/* Tipografia: títulos com tracking negativo (Geist fica mais "editorial") e a sombra mínima. */
+h1,
+h2 {
+  text-shadow: var(--text-depth);
+  text-wrap: balance;
+}
+h1 {
+  letter-spacing: -0.025em;
+}
+body {
+  font-feature-settings: "liga" 1, "calt" 1;
+  text-rendering: optimizeLegibility;
+}

@@ -1,0 +1,51 @@
+# On-premises: Postgres + migração + aplicação.
+#   ENCRYPTION_KEY=$(openssl rand -base64 32) docker compose up -d --build
+#   docker compose run --rm migrate npx tsx scripts/create-admin.ts --email admin@empresa.com --name "Admin"
+# Job de limpeza diário (crontab do servidor):
+#   0 3 * * *  cd /caminho && docker compose run --rm migrate npx tsx scripts/cleanup.ts
+# Em produção, coloque um proxy TLS (Nginx/Caddy/Traefik) na frente e use COOKIE_SECURE=true
+# e TRUSTED_IP_HEADER=x-forwarded-for (o proxy sobrescreve o cabeçalho).
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: flash
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-troque-esta-senha}
+      POSTGRES_DB: flash
+      TZ: UTC
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U flash -d flash"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  migrate:
+    build: { context: ., target: migrate }
+    environment: &appenv
+      DATABASE_URL: postgresql://flash:${POSTGRES_PASSWORD:-troque-esta-senha}@db:5432/flash
+      DATABASE_URL_UNPOOLED: postgresql://flash:${POSTGRES_PASSWORD:-troque-esta-senha}@db:5432/flash
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?defina ENCRYPTION_KEY (openssl rand -base64 32)}
+      # http puro só para avaliação local; atrás de TLS, use true.
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      TRUSTED_IP_HEADER: ${TRUSTED_IP_HEADER:-}
+      # Sem saída de internet no servidor, use "off" (o endereço vira preenchimento manual).
+      CEP_PROVIDER: ${CEP_PROVIDER:-remote}
+      # Limpar a base / dados de teste: desligado por padrão em produção.
+      ALLOW_DATA_RESET: ${ALLOW_DATA_RESET:-false}
+    depends_on:
+      db: { condition: service_healthy }
+
+  app:
+    build: { context: ., target: runner }
+    environment: *appenv
+    ports:
+      - "3000:3000"
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    restart: unless-stopped
+
+volumes:
+  pgdata:

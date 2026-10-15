@@ -1,0 +1,278 @@
+// Prisma 7: cliente gerado em TypeScript dentro do projeto (src/generated/prisma, fora do git), sem engine nativo.
+// As URLs de conexão ficam em prisma.config.ts (CLI) e em src/server/db.ts (app, via @prisma/adapter-pg).
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  OPERATOR
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum SignupStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ContactOrigin {
+  FAMILIA
+  AMIGOS
+  TRABALHO
+  ESTUDOS
+  SERVICOS
+  OUTRO
+}
+
+model User {
+  id                  String     @id @default(cuid())
+  name                String
+  // Sempre em minúsculas (normalizado na entrada).
+  email               String     @unique
+  passwordHash        String
+  role                Role
+  status              UserStatus @default(ACTIVE)
+  // Permissões sobre contatos (o admin tem todas, independentemente desta lista). Ver src/lib/permissions.ts.
+  // Padrão = operador como sempre foi: cria, edita, apaga e exporta os próprios contatos.
+  permissions         String[]   @default(["contacts.create", "contacts.edit", "contacts.delete", "contacts.export"])
+  // Senha provisória (criada pelo admin): troca obrigatória antes de usar o sistema.
+  mustChangePassword  Boolean    @default(false)
+  passwordChangedAt   DateTime   @default(now())
+  failedLoginAttempts Int        @default(0)
+  lockedUntil         DateTime?
+  // Segredo TOTP cifrado (AES-256-GCM). Ativo só quando totpEnabledAt está preenchido.
+  totpSecret          String?
+  totpEnabledAt       DateTime?
+  // Último passo TOTP aceito: o mesmo código não vale duas vezes.
+  totpLastStep        Int?
+  lastLoginAt         DateTime?
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+  createdById         String?
+  createdBy           User?      @relation("UserCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdUsers     User[]           @relation("UserCreatedBy")
+  sessions         Session[]
+  loginChallenges  LoginChallenge[]
+  contacts         Contact[]
+  notifications    Notification[]
+  auditLogs        AuditLog[]
+  decidedRequests  SignupRequest[]  @relation("SignupDecidedBy")
+  approvedRequests SignupRequest[]  @relation("SignupCreatedUser")
+  updatedContacts  Contact[]        @relation("ContactUpdatedBy")
+  contactNotes     ContactNote[]
+  favorites        ContactFavorite[]
+  supportTickets   SupportTicket[]
+}
+
+// Agregados do painel: contatos por dia (fuso de São Paulo), origem, UF, DDD e autor. Mantidos por trigger no
+// Postgres na mesma transação da escrita em Contact (migration _agregados_do_painel); o painel não varre Contact.
+// Sem FK para User de propósito: é contagem derivada, reconstruível com `SELECT contact_stat_rebuild()`.
+model ContactStat {
+  day         DateTime      @db.Date
+  origin      ContactOrigin
+  state       String        @db.Char(2)
+  ddd         String        @db.Char(2)
+  createdById String
+  count       Int
+
+  @@id([day, origin, state, ddd, createdById])
+}
+
+// Foto do contato em tabela própria: os bytes só são lidos quando a imagem é pedida. Sai junto com o contato.
+model ContactPhoto {
+  contactId String   @id
+  contact   Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  mimeType  String
+  data      Bytes
+  updatedAt DateTime @updatedAt
+}
+
+// Sessão opaca: o cookie leva um token aleatório; aqui só fica o SHA-256 dele.
+// Vazamento do banco não entrega sessões válidas, e revogar é apagar a linha.
+model Session {
+  id         String   @id // sha256(token) em hex
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  expiresAt  DateTime
+  ipAddress  String?
+  userAgent  String?
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// Etapa entre a senha correta e o código 2FA. Curta, com limite de tentativas.
+model LoginChallenge {
+  id        String   @id // sha256(token) em hex
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model SignupRequest {
+  id            String        @id @default(cuid())
+  name          String
+  email         String
+  // Hash da senha escolhida pelo operador; vira a senha da conta na aprovação e é apagado na decisão.
+  passwordHash  String?
+  status        SignupStatus  @default(PENDING)
+  // Token da tela de espera (cookie httpOnly). Só o hash fica aqui.
+  waitTokenHash String        @unique
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime      @default(now())
+  decidedAt     DateTime?
+  decidedById   String?
+  decidedBy     User?         @relation("SignupDecidedBy", fields: [decidedById], references: [id], onDelete: SetNull)
+  decisionNote  String?
+  userId        String?       @unique
+  user          User?         @relation("SignupCreatedUser", fields: [userId], references: [id], onDelete: SetNull)
+
+  // Índice único parcial (só PENDING) criado na migration: uma solicitação pendente por e-mail.
+  @@index([status, createdAt])
+  @@index([email])
+}
+
+model Contact {
+  id          String        @id @default(cuid())
+  name        String
+  email       String?
+  // Só dígitos, com DDD (10 ou 11).
+  phone       String
+  // Tem WhatsApp? null = não informado (a tela deduz pelo tipo de número: celular sim, fixo não).
+  whatsapp    Boolean?
+  company     String?
+  // Endereço opcional. O CEP (só dígitos) pode preencher logradouro, bairro, cidade e UF automaticamente.
+  zipCode     String?       @db.Char(8)
+  street      String?
+  number      String?
+  district    String?
+  city        String
+  state       String        @db.Char(2)
+  origin      ContactOrigin
+  notes       String?
+  createdAt   DateTime      @default(now())
+  createdById String
+  createdBy   User          @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  // Última alteração (a trilha completa fica na auditoria).
+  updatedAt   DateTime?
+  updatedById String?
+  updatedBy   User?         @relation("ContactUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  contactNotes ContactNote[]
+  favoritedBy  ContactFavorite[]
+  photo        ContactPhoto?
+
+  @@index([createdAt(sort: Desc), id(sort: Desc)])
+  @@index([createdById, createdAt(sort: Desc)])
+  @@index([state])
+  @@index([origin])
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String
+  link      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+// Trilha de auditoria append-only (a aplicação nunca altera nem apaga).
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  actor     User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action    String
+  entity    String?
+  entityId  String?
+  metadata  Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt(sort: Desc)])
+  @@index([actorId, createdAt(sort: Desc)])
+  @@index([action])
+}
+
+// Limite de requisições por janela fixa, compartilhado entre instâncias (atualizado com um único upsert atômico).
+model RateLimitBucket {
+  key     String   @id
+  count   Int
+  resetAt DateTime
+
+  @@index([resetAt])
+}
+
+// Notas de acompanhamento do contato (histórico de conversas), diferentes do campo fixo "Observações".
+model ContactNote {
+  id        String   @id @default(cuid())
+  contactId String
+  contact   Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  authorId  String?
+  author    User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([contactId, createdAt(sort: Desc)])
+}
+
+// Favoritos são de cada usuário: marcar não muda nada para os outros.
+model ContactFavorite {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contactId String
+  contact   Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, contactId])
+  @@index([contactId])
+}
+
+enum SupportStatus {
+  OPEN
+  RESOLVED
+}
+
+// Chamado de suporte (botão flutuante). Fica gravado mesmo que a pessoa não chegue a mandar pelo WhatsApp.
+model SupportTicket {
+  id         String        @id @default(cuid())
+  // Sem usuário quando vem da tela de login (quem não consegue entrar).
+  userId     String?
+  user       User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  name       String?
+  replyTo    String?
+  type       String
+  message    String
+  page       String?
+  status     SupportStatus @default(OPEN)
+  ipAddress  String?
+  createdAt  DateTime      @default(now())
+  resolvedAt DateTime?
+
+  @@index([status, createdAt(sort: Desc)])
+}
