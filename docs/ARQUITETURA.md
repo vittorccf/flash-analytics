@@ -278,7 +278,7 @@ sequenceDiagram
     L->>L: argon2 em hash fictício (mesmo tempo de resposta)
     L-->>B: mensagem genérica (reserva recusada: UPDATE … WHERE tentativas < 5)
   else senha errada
-    L->>DB: tentativa já reservada; bloqueia em 5 (erros de 2FA somam aqui)
+    L->>DB: tentativa já reservada, bloqueia em 5 (erros de 2FA somam aqui)
     L-->>B: mensagem genérica (auditado)
   else senha certa e 2FA ativo
     L->>DB: cria LoginChallenge (hash do token, 5 min)
@@ -334,7 +334,7 @@ sequenceDiagram
   S->>S: requirePermission("contacts.create") + zod
   S->>DB: BEGIN, INSERT Contact, INSERT Notification (1 por admin), INSERT AuditLog, pg_notify(contact.created), COMMIT
   DB-->>S2: NOTIFY (só depois do COMMIT)
-  S2->>S2: filtra por perfil (admin recebe; outro operador não)
+  S2->>S2: filtra por perfil (admin recebe, outro operador não)
   S2-->>A: event contact.created
   A->>A: aviso na tela + router.refresh()
   A->>S2: RSC refresh (painel, contadores)
