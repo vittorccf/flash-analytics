@@ -40,7 +40,7 @@ _Atualizado em 14/10/2026._
   WhatsApp/e-mail do suporte); polimento visual com o degradê da marca.
 - **Demonstração em produção:** `ALLOW_DEMO_DATA` e `ALLOW_DATA_RESET` estão **ligados de propósito** em
   flash.vittorccf.com.br, para quem avaliar poder gerar e limpar dados. Num produto, ficam desligados (padrão).
-- **Testes executados:** 141 unitários e 30 ponta a ponta passando contra o build de produção. Eles acharam e
+- **Testes executados:** 145 unitários e 30 ponta a ponta passando contra o build de produção. Eles acharam e
   corrigimos bugs reais: listas (UF/origem) apagadas depois de um erro do servidor, menu do topo quebrado pelo
   `backdrop-blur`, menu/tempo real presos no modo "senha provisória" após a troca, e usuário desativado sumindo da
   lista. `scripts/look.mjs` gera capturas de revisão visual contra o servidor de teste.

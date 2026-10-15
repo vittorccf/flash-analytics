@@ -69,12 +69,15 @@ flowchart TB
 
   subgraph PG["PostgreSQL"]
     T[("Tabelas<br/>User · Session · SignupRequest · Contact<br/>Notification · AuditLog · RateLimitBucket")]
+    AG[("ContactStat<br/>agregados do painel")]
     CH{{"Canal NOTIFY<br/>flash_events"}}
   end
 
   UI -->|POST Server Action| PX --> SA --> DAL --> UCs
   UCs -->|Prisma, transação| T
   UCs -->|"pg_notify (na mesma transação)"| CH
+  T -->|"trigger (mesma transação)"| AG
+  UCs -->|painel lê só os agregados| AG
   CH -->|LISTEN| BUS --> SSE
   SSE -->|text/event-stream| RT
   SSE -->|text/event-stream| WP
@@ -238,6 +241,14 @@ erDiagram
     int count
     timestamp resetAt
   }
+  ContactStat {
+    date day PK "dia em São Paulo"
+    enum origin PK
+    char state PK
+    char ddd PK
+    text createdById PK
+    int count "mantido por trigger em Contact"
+  }
 ```
 
 ## 6. Sequência: login (com bloqueio e 2FA)
@@ -260,10 +271,11 @@ sequenceDiagram
     L-->>B: "Muitas tentativas…" (auditado)
   end
   L->>DB: busca usuário
-  alt não existe ou bloqueado
+  alt e-mail não existe
     L->>L: argon2 em hash fictício (mesmo tempo de resposta)
     L-->>B: mensagem genérica (auditado)
   else conta bloqueada ou 5 tentativas em curso
+    L->>L: argon2 em hash fictício (mesmo tempo de resposta)
     L-->>B: mensagem genérica (reserva recusada: UPDATE … WHERE tentativas < 5)
   else senha errada
     L->>DB: tentativa já reservada; bloqueia em 5 (erros de 2FA somam aqui)
@@ -289,7 +301,10 @@ sequenceDiagram
   participant DB as Postgres
   actor A as Admin
 
+  V->>S: ao sair do campo: o e-mail é real? (DNS MX, temporário, erro de digitação)
+  S-->>V: ok ou "Você quis dizer …?"
   V->>S: signupAction(nome, e-mail, senha)
+  S->>S: limite por IP + zod + e-mail real (de novo)
   S->>DB: BEGIN, INSERT SignupRequest (hash da senha, hash do token), notificações, auditoria, pg_notify, COMMIT
   S-->>V: cookie __Host-flash_signup (token de espera)
   DB-->>A: NOTIFY signup.requested → SSE → aviso na tela do admin
@@ -316,7 +331,7 @@ sequenceDiagram
 
   Note over A,S2: o admin está conectado em /api/events numa outra instância
   O->>S: createContactAction(form)
-  S->>S: requireOperator + zod
+  S->>S: requirePermission("contacts.create") + zod
   S->>DB: BEGIN, INSERT Contact, INSERT Notification (1 por admin), INSERT AuditLog, pg_notify(contact.created), COMMIT
   DB-->>S2: NOTIFY (só depois do COMMIT)
   S2->>S2: filtra por perfil (admin recebe; outro operador não)
