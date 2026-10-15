@@ -30,7 +30,7 @@ efeito **agora**, e o enunciado quer que o admin controle quem entra. Uma consul
 
 ## 2. Autorização
 
-- **DAL**: toda página, Server Action e rota chama `requireUser`/`requireAdmin`/`requireOperator`
+- **DAL**: toda página, Server Action e rota chama `requireUser`/`requireAdmin`/`requirePermission`
   (`src/server/auth/dal.ts`). O `proxy.ts` só faz um redirecionamento otimista e **não** é a barreira (é o que a
   documentação do Next recomenda, depois de falhas como a CVE-2025-29927).
 - **Server Actions são endpoints públicos**: cada uma refaz a autorização, mesmo que a tela já tenha feito.
@@ -65,7 +65,7 @@ efeito **agora**, e o enunciado quer que o admin controle quem entra. Uma consul
 | Edição/exclusão por id | Contato de outro operador responde 404 (igual a inexistente); a action revalida a visibilidade mesmo com o id vindo amarrado do servidor. |
 | Atalhos externos (WhatsApp, Gmail, Outlook) | Só links que o navegador abre (`noopener noreferrer`); o sistema não envia nada nem fala com essas APIs. |
 | Permissões por usuário | Conferidas no caso de uso (`assertCan`) além da tela e da action: um botão escondido não é a barreira. Visibilidade "ver equipe" vale também no tempo real (o stream filtra) e na busca do topo. Mudar o perfil de alguém reconecta o stream dessa pessoa com o perfil novo. |
-| Foto de perfil | PNG/JPEG/WebP até 1 MB, tipo conferido pelos bytes (assinatura), SVG recusado (pode ter script); CHECK de tamanho e tipo também no banco; servida com o tipo detectado, `nosniff` e só para quem está logado. |
+| Foto do contato | PNG/JPEG/WebP até 1 MB, tipo conferido pelos bytes (assinatura), SVG recusado (pode ter script); CHECK de tamanho e tipo também no banco; servida com o tipo detectado, `nosniff` e só para quem enxerga o contato (outro operador recebe 404). |
 | Compartilhar contato | O link é interno (só abre para quem tem acesso). O cartão .vcf é exportação: exige "Exportar" e fica na auditoria. |
 | Job de limpeza (cron) | Rota exige `Authorization: Bearer $CRON_SECRET` (comparação em tempo constante); sem segredo, desligada. |
 | Dados de teste | Só admin; acrescenta contatos fictícios (nunca apaga), até 500 por vez, auditado. Em produção só com `ALLOW_DEMO_DATA=true` (ou `ALLOW_DATA_RESET=true`). |

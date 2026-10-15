@@ -22,7 +22,7 @@ mostrar o controle que está sendo avaliado), e eu as trocaria num produto. Deix
 | WhatsApp disponível? | Regra por tipo de número + campo no cadastro (seção 15) | **Mantém** até existir consulta oficial | Única forma legítima e sem custo |
 | Permissões | Lista por usuário + perfis prontos (seção 16) | **Mantém**; papéis nomeados se crescer | Simples de auditar; cobre Leitor/Editor/Criar/Apagar |
 | Tema escuro | Tokens redefinidos por `data-theme`, cookie lido no servidor (seção 17) | **Mantém** | Sem piscar e sem script inline (CSP) |
-| Foto de perfil | No Postgres (bytea), tabela própria (seção 18) | Object storage (Vercel Blob/S3) com muitos usuários | Sem serviço externo; backup junto com a base |
+| Foto do contato | No Postgres (bytea), tabela própria (seção 18) | Object storage (Vercel Blob/S3) com muitos usuários | Sem serviço externo; backup junto com a base |
 
 ## 1. Código (Next.js full-stack) em vez de low-code/no-code
 
@@ -260,12 +260,14 @@ Os tokens semânticos são redefinidos em `:root[data-theme="dark"]` (e em `"sys
 script inline (a CSP com nonce continua estrita) e nada de "piscar" claro. O teste de tokens verifica o contraste
 de todos os pares também no escuro e que os dois blocos são idênticos.
 
-## 18. Foto de perfil no banco
+## 18. Foto do contato no banco
+
+Só contatos têm foto; usuários do sistema aparecem com as iniciais.
 
 | Prós | Contras |
 | --- | --- |
-| Sem serviço externo; backup e LGPD junto com o resto (excluir o usuário apaga a foto) | Banco cresce (limite de 1 MB por foto); sem CDN |
-| Autorização simples (rota do próprio app) | Com milhares de usuários, object storage é mais barato |
+| Sem serviço externo; backup e LGPD junto com o resto (excluir o contato apaga a foto) | Banco cresce (limite de 1 MB por foto); sem CDN |
+| Autorização simples (a mesma visibilidade da ficha do contato) | Com milhares de contatos com foto, object storage é mais barato |
 
 ## 19. Suporte: chamado gravado + WhatsApp "clique para conversar"
 

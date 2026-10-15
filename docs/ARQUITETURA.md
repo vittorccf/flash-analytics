@@ -61,7 +61,7 @@ flowchart TB
   subgraph SRV["Servidor Next.js — N instâncias, sem estado"]
     PX["proxy.ts<br/>CSP com nonce · cabeçalhos · redirecionamento otimista"]
     SA["Server Actions<br/>(validação zod)"]
-    DAL["DAL de autorização<br/>requireUser / requireAdmin / requireOperator"]
+    DAL["DAL de autorização<br/>requireUser / requireAdmin / requirePermission"]
     UCs["Casos de uso (src/server)<br/>login · signup-requests · contacts · users · dashboard · audit"]
     SSE["Rotas SSE<br/>/api/events · /api/signup-requests/stream"]
     BUS["EventBus<br/>1 conexão LISTEN por instância"]

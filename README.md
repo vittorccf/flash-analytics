@@ -32,7 +32,7 @@ use "Solicitar acesso" na tela de login; o pedido aparece em tempo real para o a
 | Operador cadastra contatos | `/contatos/novo`, com endereço preenchido pelo CEP (ViaCEP, BrasilAPI de reserva). O admin também cadastra; os outros admins são notificados |
 | Extra: CRUD, importar e exportar | Ver, editar e excluir contato (operador só os seus); exportar **Excel/CSV** com os filtros da tela; importar **.xlsx/CSV** com modelo, validação por linha e duplicados pulados; admin edita e exclui usuários |
 | Extra: falar com o contato | Ao lado do número: **WhatsApp** (app ou Web; opaco quando o número não deve ter), **ligar** e **SMS** (o sistema pergunta qual app usar). Ao lado do e-mail: app padrão, Gmail ou Outlook |
-| Extra: equipe e organização | **Permissões** por usuário (Leitor, Editor, Criar, Apagar, Exportar); **foto de perfil**; **tema escuro**; **busca** no topo (Ctrl+K) e **discador**; **favoritos**, **ordenação** por coluna, **aviso de duplicado**; **notas** e **histórico** (quem criou/alterou) no contato; **compartilhar** (link, WhatsApp, e-mail, .vcf) |
+| Extra: equipe e organização | **Permissões** por usuário (Leitor, Editor, Criar, Apagar, Exportar); **foto do contato**; **tema escuro**; **busca** no topo (Ctrl+K) e **discador**; **favoritos**, **ordenação** por coluna, **aviso de duplicado**; **notas** e **histórico** (quem criou/alterou) no contato; **compartilhar** (link, WhatsApp, e-mail, .vcf) |
 | Extra: manutenção | **Job diário de limpeza** (Cron da Vercel ou `npm run job:limpeza`), **dados de teste** e **limpar a base** em `/admin/manutencao` |
 | Extra: suporte | Botão flutuante (pode ser escondido) com tipo de problema e mensagem: o chamado fica gravado (`/admin/suporte`), os admins são avisados e a pessoa envia pelo WhatsApp com a mensagem pronta |
 | Todo contato gera **notificação em tempo real** para o admin | aviso na tela + contador no menu + histórico em `/notificacoes` |
@@ -78,7 +78,8 @@ Para escolher a senha do admin em vez de gerar uma: `ADMIN_PASSWORD="uma frase l
 ### Roteiro de avaliação (5 minutos)
 
 1. Abra `http://localhost:3000` numa janela e entre como **admin** (vai pedir para trocar a senha provisória).
-2. Numa **janela anônima**, clique em **Solicitar acesso** e preencha. A tela fica em "Aguardando aprovação".
+2. Numa **janela anônima**, clique em **Solicitar acesso** e preencha com um **e-mail de domínio real** (o sistema
+   confere no DNS se o domínio recebe e-mail e recusa endereços temporários). A tela fica em "Aguardando aprovação".
 3. Na janela do admin aparece o aviso. Em **Solicitações**, aprove. A janela anônima muda para "Acesso aprovado!"
    **sem recarregar**.
 4. Entre como operador e cadastre um contato. O admin recebe o aviso na hora e o **Painel** se atualiza sozinho.
@@ -158,7 +159,7 @@ src/
     (app)/                 área logada: contatos, admin (painel, solicitações, usuários, atividade), conta
     api/                   SSE (/events, /signup-requests/stream), /session, /health
   server/                  regras de negócio e acesso a dados (nunca importado pelo navegador)
-    auth/                  sessão, DAL (requireAdmin/requireOperator), login, senha, TOTP, rate limit
+    auth/                  sessão, DAL (requireUser/requireAdmin/requirePermission), login, senha, TOTP, rate limit
     realtime/              eventos de domínio, barramento LISTEN/NOTIFY, resposta SSE
     contacts.ts, signup-requests.ts, users.ts, notifications.ts, dashboard.ts, activity.ts, audit.ts
   lib/                     regras puras compartilhadas: validação (zod), política de senha, telefone, paginação

@@ -52,7 +52,7 @@ tratando o teste como produto.
 | RF25 | Ordenar a lista clicando na coluna; favoritos por usuário e filtro "Só favoritos" | Operador, Admin | Pedido do negócio |
 | RF26 | Detalhe do contato com notas de acompanhamento, histórico de auditoria (quem criou/alterou, quais campos) e compartilhar (link interno, WhatsApp, e-mail, cartão .vcf) | Operador, Admin | Pedido do negócio |
 | RF27 | Busca de contatos no topo (Ctrl+K) e discador em modal | Operador, Admin | Pedido do negócio |
-| RF28 | Foto de perfil | Todos | Pedido do negócio |
+| RF28 | Foto do contato (usuários não têm foto) | Quem pode editar o contato | Pedido do negócio |
 | RF29 | Tema escuro (claro, escuro ou do sistema) | Todos | Pedido do negócio |
 | RF30 | Job diário de limpeza; gerar dados de teste; limpar a base | Sistema, Admin | Pedido do negócio |
 
@@ -61,7 +61,7 @@ tratando o teste como produto.
 | ID | Requisito | Como foi atendido |
 | --- | --- | --- |
 | RNF01 | Segurança de autenticação | argon2id, sessões opacas revogáveis, cookie `__Host-`/HttpOnly/Secure/SameSite=Strict, bloqueio por tentativas, rate limit por IP e por e-mail, resposta e tempo iguais para conta inexistente, 2FA TOTP com proteção contra reuso. Ver [SEGURANCA.md](SEGURANCA.md) |
-| RNF02 | Autorização no servidor | DAL (`requireAdmin`/`requireOperator`) em toda página, Server Action e rota; filtro de visibilidade dentro do caso de uso |
+| RNF02 | Autorização no servidor | DAL (`requireUser`/`requireAdmin`/`requirePermission`) em toda página, Server Action e rota; filtro de visibilidade dentro do caso de uso |
 | RNF03 | Tempo real | Postgres `LISTEN/NOTIFY` → SSE. Latência sub-segundo, reconexão automática com ressincronização |
 | RNF04 | Escalabilidade horizontal | App sem estado em memória (sessão, rate limit e eventos no Postgres); qualquer instância atende qualquer usuário |
 | RNF05 | Paginação | Por cursor (keyset) no banco para contatos e atividade, offset nas listas pequenas; índices compostos `(createdAt desc, id desc)`; tamanho de página só de uma lista fechada |
