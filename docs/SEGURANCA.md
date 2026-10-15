@@ -67,7 +67,8 @@ efeito **agora**, e o enunciado quer que o admin controle quem entra. Uma consul
 | Foto de perfil | PNG/JPEG/WebP até 1 MB, tipo conferido pelos bytes (assinatura), SVG recusado (pode ter script); CHECK de tamanho e tipo também no banco; servida com o tipo detectado, `nosniff` e só para quem está logado. |
 | Compartilhar contato | O link é interno (só abre para quem tem acesso). O cartão .vcf é exportação: exige "Exportar" e fica na auditoria. |
 | Job de limpeza (cron) | Rota exige `Authorization: Bearer $CRON_SECRET` (comparação em tempo constante); sem segredo, desligada. |
-| Limpar a base | Desligado em produção salvo `ALLOW_DATA_RESET=true`; exige senha (com limite de tentativas) e digitar LIMPAR; nunca apaga usuários nem auditoria; fica registrado. |
+| Dados de teste | Só admin; acrescenta contatos fictícios (nunca apaga), até 500 por vez, auditado. Em produção só com `ALLOW_DEMO_DATA=true` (ou `ALLOW_DATA_RESET=true`). |
+| Limpar a base | Desligado em produção salvo `ALLOW_DATA_RESET=true` (a variável de dados de teste não libera isto); exige senha (com limite de tentativas) e digitar LIMPAR; nunca apaga usuários nem auditoria; fica registrado. |
 | Retenção (LGPD) | O job apaga sessões vencidas, notificações lidas há 90 dias e solicitações de acesso decididas há 180 dias (nome/e-mail sem uso). |
 | Vazamento por erro | Página de erro genérica com `digest`; detalhes só no log do servidor. |
 | IP forjado | O IP só vem de `X-Forwarded-For` quando `TRUSTED_IP_HEADER` está configurado (proxy confiável na frente), e usa o **último** item, o que o proxy acrescentou; os anteriores são forjáveis pelo cliente. |

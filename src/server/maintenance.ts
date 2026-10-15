@@ -37,8 +37,11 @@ export const runCleanup = async (via: "cron" | "cli" | "admin", actorId: string 
   return removed;
 };
 
-// Limpar a base e gerar dados de teste: perigosos em produção, então só com a variável liberando.
-export const dataResetAllowed = () => process.env.NODE_ENV !== "production" || process.env.ALLOW_DATA_RESET === "true";
+// Fora de produção, tudo liberado. Em produção, cada um com a sua variável: limpar a base apaga dados sem volta
+// (ALLOW_DATA_RESET); dados de teste só acrescentam contatos fictícios (ALLOW_DEMO_DATA, ou a de limpeza).
+const isProduction = () => process.env.NODE_ENV === "production";
+export const dataResetAllowed = () => !isProduction() || process.env.ALLOW_DATA_RESET === "true";
+export const demoDataAllowed = () => dataResetAllowed() || process.env.ALLOW_DEMO_DATA === "true";
 
 export const RESET_SCOPES = {
   contacts: "Contatos (com notas e favoritos)",
@@ -66,7 +69,7 @@ export const DEMO_MAX = 500;
 
 // Distribui os contatos entre os operadores ativos (ou no próprio admin, se não houver operador).
 export const seedDemoContacts = async (adminId: string, count: number, meta: RequestMeta | undefined, seed = Date.now()) => {
-  if (!dataResetAllowed()) throw new Error("Geração de dados de teste desativada neste ambiente.");
+  if (!demoDataAllowed()) throw new Error("Geração de dados de teste desativada neste ambiente.");
   const n = Math.max(1, Math.min(DEMO_MAX, Math.floor(count)));
   const authors = (await db.user.findMany({ where: { role: "OPERATOR", status: "ACTIVE" }, select: { id: true } })).map((u) => u.id);
   const pool = authors.length ? authors : [adminId];

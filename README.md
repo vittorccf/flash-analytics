@@ -125,6 +125,7 @@ Sem acesso para baixar o navegador do Playwright, use um Chromium já instalado:
    | `ENCRYPTION_KEY` | `openssl rand -base64 32` |
    | `TRUSTED_IP_HEADER` | `x-forwarded-for` (a Vercel sobrescreve esse cabeçalho) |
    | `CEP_PROVIDER` | `remote` (padrão; pode omitir) |
+   | `ALLOW_DEMO_DATA` | opcional: `true` libera Manutenção > Dados de teste (só acrescenta contatos fictícios) |
 
 4. Crie o admin uma vez, da sua máquina, apontando para o banco de produção:
    `DATABASE_URL="<url direct>" npm run db:admin -- --email voce@empresa.com --name "Seu Nome"`.

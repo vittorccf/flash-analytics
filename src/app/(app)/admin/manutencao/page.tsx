@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { requireAdmin } from "@/server/auth/dal";
-import { DEMO_MAX, RESET_SCOPES, RETENTION, dataResetAllowed } from "@/server/maintenance";
+import { DEMO_MAX, RESET_SCOPES, RETENTION, dataResetAllowed, demoDataAllowed } from "@/server/maintenance";
 import { Alert, Card, CardHeader, PageHeader } from "@/components/ui";
 import { CleanupNow, ResetDataForm, SeedDemoForm } from "./maintenance-forms";
 
@@ -8,7 +8,8 @@ export const metadata: Metadata = { title: "Manutenção" };
 
 export default async function MaintenancePage() {
   await requireAdmin();
-  const allowed = dataResetAllowed();
+  const resetAllowed = dataResetAllowed();
+  const demoAllowed = demoDataAllowed();
 
   return (
     <>
@@ -23,7 +24,10 @@ export default async function MaintenancePage() {
               <li>Notificações lidas há mais de {RETENTION.readNotificationsDays} dias</li>
               <li>Solicitações de acesso decididas há mais de {RETENTION.decidedSignupRequestsDays} dias (dado pessoal sem uso)</li>
             </ul>
-            <p className="text-xs text-muted">Na Vercel: Cron em vercel.json + variável CRON_SECRET. Em servidor próprio: `npm run job:limpeza` no cron.</p>
+            <p className="text-xs text-muted">
+              Na Vercel: Cron em <code className="font-mono">vercel.json</code> + variável <code className="font-mono">CRON_SECRET</code>. Em
+              servidor próprio: <code className="font-mono">npm run job:limpeza</code> no cron.
+            </p>
             <CleanupNow />
           </div>
         </Card>
@@ -31,10 +35,10 @@ export default async function MaintenancePage() {
         <Card>
           <CardHeader title="Dados de teste" description={`Contatos realistas (até ${DEMO_MAX} por vez), divididos entre os operadores ativos`} />
           <div className="space-y-3 p-5 text-sm">
-            {allowed ? (
+            {demoAllowed ? (
               <SeedDemoForm max={DEMO_MAX} />
             ) : (
-              <Alert tone="warning">Desativado neste ambiente (produção). Para liberar, defina ALLOW_DATA_RESET=true.</Alert>
+              <Alert tone="warning">Desativado em produção. Para liberar só os dados de teste, defina ALLOW_DEMO_DATA=true.</Alert>
             )}
           </div>
         </Card>
@@ -42,10 +46,10 @@ export default async function MaintenancePage() {
         <Card className="lg:col-span-2">
           <CardHeader title="Limpar a base" description="Apaga dados de verdade, sem volta. Usuários e auditoria nunca são apagados aqui." />
           <div className="max-w-md p-5">
-            {allowed ? (
+            {resetAllowed ? (
               <ResetDataForm scopes={RESET_SCOPES} />
             ) : (
-              <Alert tone="warning">Desativado neste ambiente (produção). Para liberar, defina ALLOW_DATA_RESET=true.</Alert>
+              <Alert tone="warning">Desativado em produção (apaga dados sem volta). Para liberar, defina ALLOW_DATA_RESET=true.</Alert>
             )}
           </div>
         </Card>
