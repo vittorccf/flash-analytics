@@ -38,6 +38,11 @@ const main = async () => {
   const passwordHash = await hashPassword(password);
   const mustChangePassword = !provided;
 
+  // URL vazia faria o driver tentar localhost:5432 em silêncio: melhor parar com uma mensagem clara.
+  if (!process.env.DATABASE_URL?.trim()) {
+    console.error("DATABASE_URL vazia: defina a URL do banco (ou rode na pasta do projeto, com o .env local).");
+    process.exit(1);
+  }
   const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
   try {
     await db.user.upsert({
@@ -52,7 +57,15 @@ const main = async () => {
     await db.$disconnect();
   }
 
-  console.log(`\nAdministrador pronto: ${email}`);
+  // Só o servidor (sem usuário/senha): deixa claro se gravou no banco local ou no de produção.
+  const target = (() => {
+    try {
+      return new URL(process.env.DATABASE_URL ?? "").host;
+    } catch {
+      return "(DATABASE_URL inválida)";
+    }
+  })();
+  console.log(`\nAdministrador pronto: ${email} (banco: ${target})`);
   if (!provided) console.log(`Senha provisória (exibida só agora; troca obrigatória no primeiro acesso): ${password}\n`);
 };
 

@@ -7,6 +7,9 @@ esperam a aprovação **em tempo real**. Depois de aprovados, cadastram contatos
 usuários, recebem **notificação em tempo real** de cada contato novo e acompanham tudo num **painel ao vivo** e numa
 **trilha de auditoria**.
 
+**No ar:** https://flash.vittorccf.com.br (Vercel em São Paulo + Neon Postgres em São Paulo). Para avaliar como operador,
+use "Solicitar acesso" na tela de login; o pedido aparece em tempo real para o admin aprovar.
+
 > Briefing do teste, requisitos e decisões: [`docs/REQUISITOS.md`](docs/REQUISITOS.md) ·
 > Arquitetura e UML: [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md) ·
 > Segurança: [`docs/SEGURANCA.md`](docs/SEGURANCA.md) ·

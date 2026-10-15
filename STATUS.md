@@ -50,14 +50,14 @@ _Atualizado em 14/10/2026._
 | Fluxos e controles de segurança | Verificados por e2e (Chromium local, build de produção, Postgres embutido) |
 | Build `standalone` levando argon2 nativo e o runtime do Prisma 7 (driver `pg`) | Verificado localmente (`/api/health` consultando o banco) |
 | `Dockerfile` / `docker-compose.yml` | **Não executados** (sem Docker na máquina de desenvolvimento) |
-| Deploy na Vercel + Neon | **Não executado** (sem acesso às contas); passo a passo no README |
+| Deploy na Vercel + Neon | **Executado** em https://flash.vittorccf.com.br (Vercel `gru1` + Neon `sa-east-1`); `/api/health` ok |
 | Pipeline do GitHub Actions | **Não executado** (repositório ainda não publicado) |
 | Diagramas Mermaid | Escritos à mão, sem renderização local; conferir no GitHub |
 | Busca de CEP contra as APIs reais | **Não executada** (testes usam fornecedor simulado, sem rede); e2e do CEP ainda não rodado |
 
 ## Próximos passos (priorizados)
 
-1. Publicar o repositório, rodar o CI e o primeiro `docker compose up`.
+1. Deixar o CI verde no GitHub (falharam o teste de revogação de sessão e o do discador, este já corrigido) e o primeiro `docker compose up`.
 2. Migrar a autenticação para um provedor de identidade (Keycloak/Entra ID) ou para o Better Auth, mantendo a
    aprovação de operadores e a sessão revogável (`docs/DECISOES.md`, seção 5). Isso resolve de uma vez a recuperação
    de senha, passkeys, códigos de recuperação e o 2FA obrigatório para admins.
