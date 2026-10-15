@@ -6,6 +6,8 @@ import { homeFor } from "@/server/auth/dal";
 import { clearCookie, SIGNUP_WAIT_COOKIE } from "@/server/auth/session";
 import { db } from "@/server/db";
 import { requestMeta } from "@/server/request-context";
+import { consumeForIp } from "@/server/auth/rate-limit";
+import { emailProblem } from "@/server/email-check";
 import { createSignupRequest } from "@/server/signup-requests";
 import { fieldErrors, loginSchema, signupSchema, totpCodeSchema, type FieldErrors } from "@/lib/validation";
 
@@ -46,6 +48,15 @@ export async function signupAction(_prev: SignupState, formData: FormData): Prom
   const outcome = await createSignupRequest(parsed.data, await requestMeta());
   if (!outcome.ok) return outcome.field ? { errors: { [outcome.field]: outcome.message }, values } : { error: outcome.message, values };
   return { submitted: { name: parsed.data.name, email: parsed.data.email } };
+}
+
+// Conferência do e-mail ao sair do campo (antes de enviar). Pública como a própria solicitação, então tem limite
+// por IP; passado o limite, não acusa nada aqui: o envio confere de novo de qualquer forma.
+export async function checkSignupEmailAction(value: string): Promise<string | null> {
+  const parsed = signupSchema.shape.email.safeParse(value);
+  if (!parsed.success) return null; // formato inválido: a regra do navegador já mostra
+  if (!(await consumeForIp("emailCheckPerIp", (await requestMeta()).ip)).allowed) return null;
+  return emailProblem(parsed.data);
 }
 
 export async function dismissSignupAction() {

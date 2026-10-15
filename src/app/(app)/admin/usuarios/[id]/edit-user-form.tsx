@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useLiveValidation } from "@/components/live-validation";
+import { createUserSchema } from "@/lib/validation";
 import { useActionState, useState, useTransition } from "react";
 import { Trash } from "lucide-react";
 import { Alert, Button, Field, Input, Select, buttonClass, chipClass, fieldA11y } from "@/components/ui";
@@ -49,11 +51,13 @@ export const EditUserForm = ({ user, isSelf }: { user: Initial; isSelf: boolean 
   const [state, action, pending] = useActionState<EditUserState, FormData>(updateUserAction.bind(null, user.id), {});
   const [role, setRole] = useState(user.role);
   const [permissions, setPermissions] = useState<Permission[]>(ALL_PERMISSIONS.filter((p) => user.permissions.includes(p)));
-  const e = state.errors ?? {};
+  // Mesma regra da action, conferida ao sair de cada campo (o servidor valida de novo no envio).
+  const live = useLiveValidation(createUserSchema, state.errors);
+  const e = live.errors;
   const v = state.values ?? user;
 
   return (
-    <form action={action} className="space-y-4" noValidate>
+    <form action={action} className="space-y-4" noValidate {...live.formProps}>
       {state.saved ? <Alert tone="success">Alterações salvas.</Alert> : null}
       {state.error ? <Alert>{state.error}</Alert> : null}
       <Field id="name" label="Nome completo" error={e.name}>

@@ -1,17 +1,21 @@
 "use client";
 
 import { useActionState } from "react";
+import { useLiveValidation } from "@/components/live-validation";
+import { createUserSchema } from "@/lib/validation";
 import { Alert, Button, Field, Input, Select, fieldA11y } from "@/components/ui";
 import { createUserAction, type CreateUserState } from "./actions";
 import { countAttempts, type WithAttempt } from "@/lib/form-attempt";
 
 export const CreateUserForm = () => {
   const [state, action, pending] = useActionState<WithAttempt<CreateUserState>, FormData>(countAttempts(createUserAction), {});
-  const e = state.errors ?? {};
+  // Mesma regra da action, conferida ao sair de cada campo (o servidor valida de novo no envio).
+  const live = useLiveValidation(createUserSchema, state.errors);
+  const e = live.errors;
   const v = state.values ?? {};
 
   return (
-    <form key={state.attempt ?? 0} action={action} className="space-y-4 p-5" noValidate>
+    <form key={state.attempt ?? 0} action={action} className="space-y-4 p-5" noValidate {...live.formProps}>
       {state.created ? (
         <Alert tone="success">
           <p>

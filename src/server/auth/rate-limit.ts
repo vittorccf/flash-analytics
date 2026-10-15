@@ -26,6 +26,8 @@ export const LIMITS = {
   loginFailuresPerEmail: { limit: 10, windowSeconds: 15 * 60 },
   twoFactorPerIp: { limit: 20, windowSeconds: 15 * 60 },
   signupPerIp: { limit: 5, windowSeconds: 60 * 60 },
+  // Checagem do e-mail enquanto a pessoa preenche a solicitação (consulta DNS).
+  emailCheckPerIp: { limit: 40, windowSeconds: 15 * 60 },
   // Reautenticação dentro da conta (trocar senha, ligar/desligar 2FA): sessão roubada não testa senhas à vontade.
   reauthPerUser: { limit: 5, windowSeconds: 15 * 60 },
   // Busca de CEP: generoso para quem cadastra, mas impede usar o app como proxy aberto das APIs de CEP.
@@ -44,7 +46,7 @@ export const consume = (name: LimitName, subject: string) =>
 // Sem IP confiável (nenhum proxy configurado), o limite não some: vira um balde compartilhado,
 // 10x mais folgado. Pior caso é lentidão para todos sob ataque, nunca ataque sem freio.
 const NO_IP_FACTOR = 10;
-export const consumeForIp = (name: "loginPerIp" | "twoFactorPerIp" | "signupPerIp", ip: string | null) =>
+export const consumeForIp = (name: "loginPerIp" | "twoFactorPerIp" | "signupPerIp" | "emailCheckPerIp", ip: string | null) =>
   ip
     ? consume(name, ip)
     : consumeRateLimit(`${name}:sem-ip`, LIMITS[name].limit * NO_IP_FACTOR, LIMITS[name].windowSeconds);

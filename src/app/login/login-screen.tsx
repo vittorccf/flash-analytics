@@ -4,7 +4,9 @@ import { useActionState, useState } from "react";
 import clsx from "clsx";
 import { Alert, Button, Field, Input, fieldA11y } from "@/components/ui";
 import { PASSWORD_MIN } from "@/lib/password-policy";
-import { loginAction, signupAction, type LoginState, type SignupState } from "./actions";
+import { useLiveValidation } from "@/components/live-validation";
+import { signupSchema } from "@/lib/validation";
+import { checkSignupEmailAction, loginAction, signupAction, type LoginState, type SignupState } from "./actions";
 import { WaitingPanel } from "./waiting-panel";
 
 type Waiting = { name: string; email: string } | null;
@@ -90,9 +92,20 @@ const SignupForm = ({ onSubmitted }: { onSubmitted: (s: { name: string; email: s
     if (next.submitted) onSubmitted(next.submitted);
     return next;
   }, {});
-  const e = state.errors ?? {};
+  const live = useLiveValidation(signupSchema, state.errors);
+  const e = live.errors;
+
+  // Ao sair do e-mail (com formato válido), o servidor confere o domínio: DNS, temporário, erro de digitação.
+  const checkEmail = async (input: HTMLInputElement) => {
+    const value = input.value.trim().toLowerCase();
+    if (!signupSchema.shape.email.safeParse(value).success) return; // formato: a regra do navegador já mostra
+    const problem = await checkSignupEmailAction(value);
+    // Só vale se o campo ainda tem o mesmo valor (a pessoa pode ter mudado enquanto a consulta rodava).
+    if (input.value.trim().toLowerCase() === value) live.setFieldError("email", problem);
+  };
+
   return (
-    <form action={action} className="space-y-4" noValidate>
+    <form action={action} className="space-y-4" noValidate {...live.formProps}>
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Solicitar acesso</h1>
         <p className="mt-1 text-sm text-muted">
@@ -104,7 +117,15 @@ const SignupForm = ({ onSubmitted }: { onSubmitted: (s: { name: string; email: s
         <Input {...fieldA11y("name", e.name)} defaultValue={state.values?.name} autoComplete="name" required maxLength={120} />
       </Field>
       <Field id="email" label="E-mail" error={e.email}>
-        <Input {...fieldA11y("email", e.email)} defaultValue={state.values?.email} type="email" autoComplete="email" required maxLength={254} />
+        <Input
+          {...fieldA11y("email", e.email)}
+          defaultValue={state.values?.email}
+          type="email"
+          autoComplete="email"
+          required
+          maxLength={254}
+          onBlur={(event) => void checkEmail(event.currentTarget)}
+        />
       </Field>
       <Field id="password" label="Senha" error={e.password} hint={`Mínimo de ${PASSWORD_MIN} caracteres. Uma frase é mais fácil de lembrar.`}>
         <Input {...fieldA11y("password", e.password, "hint")} type="password" autoComplete="new-password" required minLength={PASSWORD_MIN} maxLength={128} />

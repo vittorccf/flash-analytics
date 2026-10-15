@@ -2,6 +2,8 @@
 
 // Formulário de contato, o mesmo para cadastrar e editar (a action e os valores iniciais mudam).
 import Link from "next/link";
+import { useLiveValidation } from "@/components/live-validation";
+import { contactSchema } from "@/lib/validation";
 import { useActionState } from "react";
 import { Alert, Button, Field, Input, Select, Textarea, buttonClass, fieldA11y } from "@/components/ui";
 import { formatPhone } from "@/lib/phone";
@@ -25,12 +27,14 @@ export const ContactForm = ({
 }) => {
   // O servidor só valida dentro de submit; countAttempts numera os envios para recriar o form (ver form-attempt.ts).
   const [state, action, pending] = useActionState<WithAttempt<ContactFormState>, FormData>(countAttempts(submit), {});
-  const e = state.errors ?? {};
+  // Mesma regra da action, conferida ao sair de cada campo (o servidor valida de novo no envio).
+  const live = useLiveValidation(contactSchema, state.errors);
+  const e = live.errors;
   // Depois de um erro, vale o que a pessoa digitou; antes, os valores atuais do contato (edição).
   const v = state.values ?? initial;
 
   return (
-    <form key={state.attempt ?? 0} action={action} className="grid gap-5 sm:grid-cols-2" noValidate>
+    <form key={state.attempt ?? 0} action={action} className="grid gap-5 sm:grid-cols-2" noValidate {...live.formProps}>
       {state.duplicates?.length ? (
         <div className="sm:col-span-2">
           <Alert tone="warning">

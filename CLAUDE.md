@@ -44,6 +44,9 @@ Sem rede para baixar o navegador do Playwright: `PW_CHROMIUM_PATH=<chrome.exe j�
   destaque informativo em grafite; perigo é botão contornado com ícone. Componente novo ganha exemplo em `/design-system`.
 - **Formulário com `<select>` e `useActionState`:** use `countAttempts` + `key={state.attempt}` (`src/lib/form-attempt.ts`),
   senão a lista volta ao vazio depois de um erro do servidor.
+- **Validação ao vivo:** formulário novo usa `useLiveValidation(schemaDaAction, state.errors)`
+  (`src/components/live-validation.ts`): `{...live.formProps}` no `<form>` e `live.errors` nos campos. O schema é o mesmo da
+  Server Action; checagem que só o servidor faz entra com `live.setFieldError`.
 - Datas exibidas por `src/lib/format.ts` (fuso de São Paulo); agregações por dia no SQL com `AT TIME ZONE`.
 - Tipos vêm do Prisma; nomes por domínio (sem `utils.ts`); comentários só onde a intenção não é óbvia.
 
