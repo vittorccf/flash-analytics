@@ -44,7 +44,7 @@ export async function signupAction(_prev: SignupState, formData: FormData): Prom
   if (!parsed.success) return { errors: fieldErrors(parsed.error), values };
 
   const outcome = await createSignupRequest(parsed.data, await requestMeta());
-  if (!outcome.ok) return { error: outcome.message, values };
+  if (!outcome.ok) return outcome.field ? { errors: { [outcome.field]: outcome.message }, values } : { error: outcome.message, values };
   return { submitted: { name: parsed.data.name, email: parsed.data.email } };
 }
 

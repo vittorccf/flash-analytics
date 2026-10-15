@@ -28,6 +28,8 @@ const env = {
   TRUSTED_IP_HEADER: "x-forwarded-for",
   // Busca de CEP simulada: os testes não dependem de rede nem das APIs públicas.
   CEP_PROVIDER: "mock",
+  // Domínios de teste (e2e.local, exemplo.com) não têm DNS: a checagem de e-mail fica desligada.
+  EMAIL_DOMAIN_CHECK: "off",
   // Manutenção (limpar base, dados de teste) liberada no ambiente de teste; o cron fica com um segredo conhecido.
   ALLOW_DATA_RESET: "true",
   CRON_SECRET: "segredo-do-cron-apenas-para-teste",

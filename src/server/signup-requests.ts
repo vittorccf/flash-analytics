@@ -7,6 +7,7 @@ import { recordAudit } from "./audit";
 import { generateToken, hashToken } from "./crypto";
 import { hashPassword } from "./auth/password";
 import { consumeForIp } from "./auth/rate-limit";
+import { emailProblem } from "./email-check";
 import { cookieOptions, SIGNUP_WAIT_COOKIE } from "./auth/session";
 import { notifyAdmins } from "./notifications";
 import { publish } from "./realtime/events";
@@ -15,7 +16,8 @@ import { paginate, type PageRequest } from "@/lib/pagination";
 
 const WAIT_COOKIE_DAYS = 7;
 
-export type SignupOutcome = { ok: true } | { ok: false; message: string };
+// field: o erro é de um campo específico (mostrado embaixo dele, não no topo do formulário).
+export type SignupOutcome = { ok: true } | { ok: false; message: string; field?: "email" };
 
 export const UNAVAILABLE =
   "Não foi possível enviar a solicitação com este e-mail. Se você já tem acesso, entre com e-mail e senha; se já pediu, aguarde a análise.";
@@ -27,6 +29,9 @@ export const createSignupRequest = async (
   if (!(await consumeForIp("signupPerIp", meta.ip)).allowed) {
     return { ok: false, message: "Muitas solicitações a partir desta rede. Tente novamente mais tarde." };
   }
+  // Depois do limite por IP: o formulário não vira um disparador de consultas DNS.
+  const invalidEmail = await emailProblem(input.email);
+  if (invalidEmail) return { ok: false, message: invalidEmail, field: "email" };
   if (await db.user.findUnique({ where: { email: input.email }, select: { id: true } })) {
     return { ok: false, message: UNAVAILABLE };
   }

@@ -133,6 +133,9 @@ Sendo honesto sobre o que **não** está feito, em ordem de prioridade.
    CSP permite). Um e2e falha se o navegador acusar estilo bloqueado.
 7. **E-mail da solicitação não é verificado**: alguém pode pedir acesso com o e-mail de outra pessoa (e um pedido falso
    pendente bloqueia o legítimo até ser recusado). A tela de aprovação avisa o admin para confirmar quem é. A mensagem
-   também ainda diferencia "não foi possível" de "enviado". Resolver por completo exige confirmação por e-mail.
+   também ainda diferencia "não foi possível" de "enviado". **Mitigado em parte:** o e-mail precisa ser de verdade
+   (domínio que recebe e-mail, conferido no DNS; sem endereço temporário; sugestão para erro de digitação, em
+   `src/server/email-check.ts`). Isso não prova que a pessoa é **dona** do endereço: só a confirmação por e-mail
+   (código enviado) resolve por completo, e exige um provedor de envio.
 8. Auditoria no mesmo banco: em produção, replicar para armazenamento imutável (S3 Object Lock) ou SIEM.
 9. ~~Limpeza periódica de registros expirados~~ — feito: job diário (`/api/cron/limpeza`, `npm run job:limpeza`).
