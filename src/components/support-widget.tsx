@@ -63,7 +63,7 @@ export const SupportWidget = ({ signedIn }: { signedIn: boolean }) => {
           role="dialog"
           aria-labelledby={`${id}-title`}
           onKeyDown={(e) => e.key === "Escape" && setOpen(false)}
-          className="w-[min(22rem,calc(100vw-2rem))] overflow-hidden modal-depth"
+          className="max-h-[calc(100dvh-7rem)] w-[min(22rem,calc(100vw-2rem))] overflow-y-auto overscroll-contain modal-depth"
         >
           <div className="relative px-5 pb-4 pt-5 text-on-brand [background:var(--gradient-brand-strong)]">
             <p id={`${id}-title`} className="text-base font-semibold">

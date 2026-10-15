@@ -154,8 +154,11 @@ test("tema escuro, busca no topo e discador", async ({ browser }) => {
   await expect(operator.getByRole("heading", { name: "Contato Buscável" })).toBeVisible();
 
   await operator.getByRole("button", { name: "Abrir discador" }).click();
+  // Numa tela de 720 px o discador inteiro cabe (antes a parte de baixo ficava cortada, sem rolagem).
+  await expect(operator.getByRole("button", { name: "0", exact: true })).toBeInViewport();
   for (const d of "11987005001") await operator.getByRole("button", { name: d, exact: true }).click();
   await expect(operator.getByRole("link", { name: "Ligar" })).toHaveAttribute("href", "tel:+5511987005001");
+  await expect(operator.getByRole("link", { name: "Ligar" })).toBeInViewport();
   await expect(operator.getByRole("dialog").getByRole("button", { name: /Contato Buscável/ })).toBeVisible();
 });
 

@@ -113,11 +113,11 @@ export const Dialer = () => {
         aria-labelledby="dialer-title"
         onKeyDown={onKeyDown}
         onClick={(e) => e.target === dialog.current && close()}
-        className="m-auto w-[min(26rem,calc(100vw-2rem))] overflow-hidden p-0 text-foreground modal-depth backdrop:bg-ink-950/55 backdrop:backdrop-blur-sm"
+        className="m-auto max-h-[calc(100dvh-2rem)] w-[min(26rem,calc(100vw-2rem))] overflow-y-auto overscroll-contain p-0 text-foreground modal-depth backdrop:bg-ink-950/55 backdrop:backdrop-blur-sm"
       >
         <div aria-hidden className="h-1 [background:var(--gradient-brand)]" />
-        <div className="p-6">
-          <div className="mb-4 flex items-center justify-between">
+        <div className="p-5">
+          <div className="mb-3 flex items-center justify-between">
             <h2 id="dialer-title" className="text-lg font-semibold tracking-tight">
               Discador
             </h2>
@@ -150,7 +150,7 @@ export const Dialer = () => {
             ) : null}
           </div>
 
-          <div className="mt-2 min-h-24" aria-live="polite">
+          <div className="mt-2 min-h-20" aria-live="polite">
             {showMatches ? (
               matches.length ? (
                 <ul aria-label="Contatos sugeridos" className="space-y-1">
@@ -189,14 +189,14 @@ export const Dialer = () => {
             )}
           </div>
 
-          <div className="mt-2 grid grid-cols-3 gap-3" role="group" aria-label="Teclado">
+          <div className="mt-2 grid grid-cols-3 gap-2" role="group" aria-label="Teclado">
             {KEYS.map(([key, letters]) => (
               <button
                 key={key}
                 type="button"
                 onClick={() => press(key)}
                 aria-label={key}
-                className="flex h-16 flex-col items-center justify-center rounded-2xl bg-subtle text-2xl font-medium transition-colors hover:bg-border active:scale-95 focus-visible:ring-2 focus-visible:ring-ring"
+                className="flex h-14 flex-col items-center justify-center rounded-2xl bg-subtle text-2xl font-medium transition-colors hover:bg-border active:scale-95 focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {key}
                 <span className="h-3 text-[0.62rem] font-semibold tracking-[0.2em] text-muted">{letters}</span>
@@ -204,7 +204,7 @@ export const Dialer = () => {
             ))}
           </div>
 
-          <div className="mt-5 grid grid-cols-5 items-center">
+          <div className="mt-4 grid grid-cols-5 items-center">
             <button type="button" onClick={copy} disabled={!canCall} className={secondary} aria-label="Copiar número">
               <Copy className="size-5" aria-hidden />
               {copied ? "Copiado" : "Copiar"}
@@ -240,7 +240,7 @@ export const Dialer = () => {
               Limpar
             </button>
           </div>
-          <p className="mt-4 text-center text-xs text-muted">O sistema pergunta qual app usar para ligar (celular, Teams, Skype…).</p>
+          <p className="mt-3 text-center text-xs text-muted">O sistema pergunta qual app usar para ligar (celular, Teams, Skype…).</p>
         </div>
       </dialog>
     </>
